@@ -19,7 +19,7 @@
             max-height: 800px;
             height: 100%;
         }
-        #layer-selector, #transparency-slider {
+        #layer-selector, #transparency-control {
             position: absolute;
             top: 10px;
             right: 10px;
@@ -29,7 +29,7 @@
             border-radius: 5px;
             box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
         }
-        #transparency-slider {
+        #transparency-control {
             top: 60px;
             width: 200px;
         }
@@ -48,9 +48,9 @@
             <option value="vari">VARI</option>
         </select>
     </div>
-    <div id="transparency-slider">
-        <label for="transparency">Transparência da camada vetorial:</label>
-        <input type="range" id="transparency" min="0" max="50" value="0">
+    <div id="transparency-control">
+        <label for="transparency">Transparência da camada vetorial (%):</label>
+        <input type="number" id="transparency" min="0" max="50" value="0">
     </div>
 
     <script>
@@ -148,13 +148,16 @@
         function updateTransparency(value) {
             if (gradeLayer) {
                 const opacityValue = 1 - (value / 100); // Converte o valor do controle deslizante para opacidade
-                gradeLayer.setStyle({
-                    opacity: opacityValue
+                gradeLayer.eachLayer(function(layer) {
+                    layer.setStyle({
+                        opacity: opacityValue,
+                        fillOpacity: 0 // Mantém o preenchimento transparente
+                    });
                 });
             }
         }
 
-        // Adiciona um listener para o controle deslizante de transparência
+        // Adiciona um listener para o controle de transparência
         document.getElementById('transparency').addEventListener('input', function(e) {
             const transparencyValue = e.target.value;
             updateTransparency(transparencyValue);
