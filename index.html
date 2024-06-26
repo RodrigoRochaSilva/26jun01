@@ -1,35 +1,48 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Georreferenciamento com Leaflet</title>
-    <!-- Include Leaflet CSS and JS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <title>Mapa Georreferenciado</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <style>
+        #map { height: 600px; } 
+    </style>
 </head>
 <body>
-    <div id="map" style="height: 500px;"></div>
+    <div id="map"></div>
 
     <script>
-        // Inicialize o mapa
-        var map = L.map('map').setView([0, 0], 5);
+        // 1. Definição da projeção EPSG:4326
+        var crs = L.CRS.EPSG4326;
 
-        // Adicione a camada base OpenStreetMap
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(map);
+        // 2. Mapa base OpenStreetMap
+        var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        });
 
-        // Carregue a imagem "ortofoto" do diretório local
-        var urlToOrtofoto = 'camadas/ortofoto.png'; // Caminho relativo ao diretório do repositório
-        var ortofotoLayer = L.imageOverlay(urlToOrtofoto, [[latitudeSul, longitudeOeste], [latitudeNorte, longitudeLeste]]).addTo(map);
+        // 3. Criação do mapa e adição da camada base
+        var map = L.map('map', {
+            crs: crs,
+            layers: [osm]
+        }).setView([-19.011158, -46.601209], 15); // Ponto central inicial (será atualizado)
 
-        // Calcule as médias de latitude e longitude
-        var latMedia = (latitudeSul + latitudeNorte) / 2;
-        var lonMedia = (longitudeOeste + longitudeLeste) / 2;
+        // 5. Carregamento das coordenadas e criação da camada de imagem
+        fetch('camadas/coordenadas.txt')
+            .then(response => response.text())
+            .then(coordsText => {
+                const coords = coordsText.slice(1, -1).split(',').map(Number); // Extrair coordenadas do texto
+                const bounds = L.latLngBounds(
+                    [coords[1], coords[0]], // Sul, Oeste
+                    [coords[3], coords[2]]  // Norte, Leste
+                );
 
-        // Centralize o mapa nas médias calculadas
-        map.setView([latMedia, lonMedia], 15);
+                L.imageOverlay('camadas/ortofoto.png', bounds).addTo(map);
+
+                // 6. Cálculo do ponto central e atualização da visualização
+                const centerLat = (coords[1] + coords[3]) / 2;
+                const centerLng = (coords[0] + coords[2]) / 2;
+                map.setView([centerLat, centerLng], map.getZoom());
+            });
     </script>
 </body>
 </html>
