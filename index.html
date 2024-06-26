@@ -98,6 +98,22 @@
                 console.error('Erro ao carregar o arquivo de coordenadas:', error);
             });
 
+        // Adiciona a camada vetorial "grade"
+        fetch('camadas/grade.geojson')
+            .then(response => response.json())
+            .then(data => {
+                L.geoJSON(data, {
+                    style: {
+                        color: 'black',
+                        weight: 3,
+                        fill: false
+                    }
+                }).addTo(map);
+            })
+            .catch(error => {
+                console.error('Erro ao carregar o arquivo GeoJSON:', error);
+            });
+
     </script>
 </body>
 </html>
