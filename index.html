@@ -17,7 +17,7 @@
             width: 80%;
             min-height: 600px;
             max-height: 800px;
-            height: 100%
+            height: 100%;
         }
     </style>
 </head>
@@ -25,10 +25,10 @@
     <div id="map"></div>
 
     <script>
-        // Inicializa o mapa
-        var map = L.map('map').setView([0, 0], 13);  // Valores iniciais temporários
+        // Inicializa o mapa com valores temporários
+        var map = L.map('map').setView([0, 0], 13);
 
-        // Adiciona a camada base do OpenStreetMap
+        // Adiciona a camada base do OpenStreetMap (CartoDB Voyager)
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
             subdomains: 'abcd',
@@ -60,6 +60,14 @@
             .catch(error => {
                 console.error('Erro ao carregar o arquivo de coordenadas:', error);
             });
+
+        // Adiciona controle de escala
+        L.control.scale().addTo(map);
+
+        // Adiciona controle de zoom
+        L.control.zoom({
+            position: 'topright'
+        }).addTo(map);
     </script>
 </body>
 </html>
