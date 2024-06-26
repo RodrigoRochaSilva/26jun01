@@ -36,6 +36,7 @@
         .label-style {
             font-size: 10px;
             color: black;
+            opacity: 1; /* Transparência padrão */
         }
     </style>
 </head>
@@ -66,6 +67,7 @@
 
         let currentOverlay;
         let gradeLayer;
+        let labelLayers = [];
 
         // Função para adicionar uma camada de imagem ao mapa
         function addImageOverlay(imageUrl, bounds) {
@@ -127,12 +129,13 @@
                     onEachFeature: function (feature, layer) {
                         if (feature.properties && feature.properties.score) {
                             const centroid = layer.getBounds().getCenter();
-                            L.marker(centroid, {
+                            const label = L.marker(centroid, {
                                 icon: L.divIcon({
                                     className: 'label-style',
                                     html: feature.properties.score
                                 })
                             }).addTo(map);
+                            labelLayers.push(label); // Adiciona o rótulo à lista
                         }
                     }
                 }).addTo(map);
@@ -144,7 +147,7 @@
                 console.error('Erro ao carregar o arquivo GeoJSON:', error);
             });
 
-        // Função para atualizar a transparência da camada vetorial
+        // Função para atualizar a transparência da camada vetorial e dos rótulos
         function updateTransparency(value) {
             if (gradeLayer) {
                 const opacityValue = 1 - (value / 100); // Converte o valor do controle deslizante para opacidade
@@ -153,6 +156,12 @@
                         opacity: opacityValue,
                         fillOpacity: 0 // Mantém o preenchimento transparente
                     });
+                });
+                labelLayers.forEach(function(label) {
+                    const labelElement = label.getElement();
+                    if (labelElement) {
+                        labelElement.style.opacity = opacityValue;
+                    }
                 });
             }
         }
@@ -163,6 +172,13 @@
             updateTransparency(transparencyValue);
         });
 
+        // Adiciona controle de escala
+        L.control.scale().addTo(map);
+
+        // Adiciona controle de zoom
+        L.control.zoom({
+            position: 'topright'
+        }).addTo(map);
     </script>
 </body>
 </html>
