@@ -29,6 +29,10 @@
             border-radius: 5px;
             box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
         }
+        .label-style {
+            font-size: 10px;
+            color: black;
+        }
     </style>
 </head>
 <body>
@@ -98,7 +102,7 @@
                 console.error('Erro ao carregar o arquivo de coordenadas:', error);
             });
 
-        // Adiciona a camada vetorial "grade"
+        // Adiciona a camada vetorial "grade" com rótulos
         fetch('camadas/grade.geojson')
             .then(response => response.json())
             .then(data => {
@@ -107,6 +111,17 @@
                         color: 'black',
                         weight: 3,
                         fill: false
+                    },
+                    onEachFeature: function (feature, layer) {
+                        if (feature.properties && feature.properties.score) {
+                            const centroid = layer.getBounds().getCenter();
+                            L.marker(centroid, {
+                                icon: L.divIcon({
+                                    className: 'label-style',
+                                    html: feature.properties.score
+                                })
+                            }).addTo(map);
+                        }
                     }
                 }).addTo(map);
             })
