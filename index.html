@@ -19,10 +19,27 @@
             max-height: 800px;
             height: 100%;
         }
+        #layer-selector {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+            background: white;
+            padding: 5px;
+            border-radius: 5px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+        }
     </style>
 </head>
 <body>
     <div id="map"></div>
+    <div id="layer-selector">
+        <label for="layers">Escolha a camada:</label>
+        <select id="layers">
+            <option value="ortofoto">Ortofoto</option>
+            <option value="vari">VARI</option>
+        </select>
+    </div>
 
     <script>
         // Inicializa o mapa com valores temporários
@@ -34,6 +51,16 @@
             subdomains: 'abcd',
             maxZoom: 24
         }).addTo(map);
+
+        let currentOverlay;
+
+        // Função para adicionar uma camada de imagem ao mapa
+        function addImageOverlay(imageUrl, bounds) {
+            if (currentOverlay) {
+                map.removeLayer(currentOverlay);
+            }
+            currentOverlay = L.imageOverlay(imageUrl, bounds).addTo(map);
+        }
 
         // Função para buscar coordenadas de georreferenciamento
         fetch('camadas/coordenadas.txt')
@@ -54,13 +81,30 @@
                 // Atualiza a visualização inicial do mapa
                 map.setView([centerLat, centerLng], 15);
 
-                // Adiciona a imagem como camada no mapa
-                L.imageOverlay('camadas/ortofoto.png', [[south, west], [north, east]]).addTo(map);
+                // Adiciona a camada padrão (ortofoto)
+                addImageOverlay('camadas/ortofoto.png', [[south, west], [north, east]]);
+
+                // Adiciona um listener para a mudança de camada
+                document.getElementById('layers').addEventListener('change', function(e) {
+                    const selectedLayer = e.target.value;
+                    if (selectedLayer === 'ortofoto') {
+                        addImageOverlay('camadas/ortofoto.png', [[south, west], [north, east]]);
+                    } else if (selectedLayer === 'vari') {
+                        addImageOverlay('camadas/vari.png', [[south, west], [north, east]]);
+                    }
+                });
             })
             .catch(error => {
                 console.error('Erro ao carregar o arquivo de coordenadas:', error);
             });
 
+        // Adiciona controle de escala
+        L.control.scale().addTo(map);
+
+        // Adiciona controle de zoom
+        L.control.zoom({
+            position: 'topright'
+        }).addTo(map);
     </script>
 </body>
 </html>
