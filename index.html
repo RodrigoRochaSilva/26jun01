@@ -19,7 +19,7 @@
             max-height: 800px;
             height: 100%;
         }
-        #layer-selector, #transparency-control {
+        #layer-selector, #transparency-control, #input-container {
             position: absolute;
             top: 10px;
             right: 10px;
@@ -31,6 +31,10 @@
         }
         #transparency-control {
             top: 60px;
+            width: 200px;
+        }
+        #input-container {
+            top: 120px;
             width: 200px;
         }
         .label-style {
@@ -62,6 +66,11 @@
     <div id="transparency-control">
         <label for="transparency">Transparência da camada vetorial (%):</label>
         <input type="range" id="transparency" min="0" max="80" value="0">
+    </div>
+    <div id="input-container">
+        <label for="product-input">Produto ou tarefa:</label>
+        <input type="text" id="product-input" maxlength="24">
+        <button id="create-button">Criar</button>
     </div>
     <div class="feature-count" id="feature-count">
         Total de Feições: 0
@@ -219,6 +228,34 @@
             const transparencyValue = e.target.value;
             updateTransparency(transparencyValue);
         });
+
+        // Adiciona um listener para o botão "criar"
+        document.getElementById('create-button').addEventListener('click', function() {
+            const productInput = document.getElementById('product-input').value.trim();
+            if (productInput) {
+                // Adiciona uma nova tabela ao arquivo GeoJSON
+                addNewFieldToGeoJson('camadas/grade.geojson', productInput);
+            }
+        });
+
+        // Função para adicionar um novo campo ao GeoJSON
+        function addNewFieldToGeoJson(url, fieldName) {
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    data.features.forEach(feature => {
+                        feature.properties[fieldName] = null;
+                    });
+                    
+                    // Ação após a adição do novo campo ao GeoJSON
+                    console.log('Novo campo adicionado:', fieldName);
+                    alert('Novo campo adicionado: ' + fieldName);
+                    // Você pode implementar a lógica para salvar o novo GeoJSON no servidor, se necessário
+                })
+                .catch(error => {
+                    console.error('Erro ao adicionar o novo campo ao GeoJSON:', error);
+                });
+        }
 
     </script>
 </body>
