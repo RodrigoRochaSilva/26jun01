@@ -111,18 +111,6 @@
                 console.error('Erro ao carregar o arquivo de coordenadas:', error);
             });
 
-        // Função para atualizar a transparência da camada vetorial
-        function updateTransparency(value) {
-            if (gradeLayer) {
-                gradeLayer.eachLayer(function(layer) {
-                    layer.setStyle({
-                        opacity: 1 - (value / 100),
-                        fillOpacity: 0
-                    });
-                });
-            }
-        }
-
         // Adiciona a camada vetorial "grade" com rótulos
         fetch('camadas/grade.geojson')
             .then(response => response.json())
@@ -132,7 +120,8 @@
                         return {
                             color: 'black',
                             weight: 3,
-                            fill: false
+                            fillOpacity: 0, // Mantém o preenchimento transparente
+                            opacity: 1 // Transparência padrão (1 = 100% opaco)
                         };
                     },
                     onEachFeature: function (feature, layer) {
@@ -154,6 +143,16 @@
             .catch(error => {
                 console.error('Erro ao carregar o arquivo GeoJSON:', error);
             });
+
+        // Função para atualizar a transparência da camada vetorial
+        function updateTransparency(value) {
+            if (gradeLayer) {
+                const opacityValue = 1 - (value / 100); // Converte o valor do controle deslizante para opacidade
+                gradeLayer.setStyle({
+                    opacity: opacityValue
+                });
+            }
+        }
 
         // Adiciona um listener para o controle deslizante de transparência
         document.getElementById('transparency').addEventListener('input', function(e) {
