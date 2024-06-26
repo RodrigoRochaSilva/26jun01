@@ -38,6 +38,16 @@
             color: black;
             opacity: 1; /* Transparência padrão */
         }
+        .feature-count {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: white;
+            padding: 5px;
+            border-radius: 5px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+        }
     </style>
 </head>
 <body>
@@ -51,7 +61,10 @@
     </div>
     <div id="transparency-control">
         <label for="transparency">Transparência da camada vetorial (%):</label>
-        <input type="range" id="transparency" min="0" max="90" value="0">
+        <input type="range" id="transparency" min="0" max="50" value="0">
+    </div>
+    <div class="feature-count" id="feature-count">
+        Total de Feições: 0
     </div>
 
     <script>
@@ -68,6 +81,7 @@
         let currentOverlay;
         let gradeLayer;
         let labelLayers = [];
+        let featureCount = 0;
 
         // Função para adicionar uma camada de imagem ao mapa
         function addImageOverlay(imageUrl, bounds) {
@@ -117,6 +131,9 @@
         fetch('camadas/grade.geojson')
             .then(response => response.json())
             .then(data => {
+                featureCount = data.features.length;
+                document.getElementById('feature-count').innerText = 'Total de Feições: ' + featureCount;
+
                 gradeLayer = L.geoJSON(data, {
                     style: function() {
                         return {
