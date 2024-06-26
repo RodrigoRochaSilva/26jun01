@@ -51,7 +51,7 @@
     </div>
     <div id="transparency-control">
         <label for="transparency">Transparência da camada vetorial (%):</label>
-        <input type="range" id="transparency" min="0" max="50" value="0">
+        <input type="range" id="transparency" min="0" max="90" value="0">
     </div>
 
     <script>
@@ -172,13 +172,6 @@
             updateTransparency(transparencyValue);
         });
 
-        // Adiciona controle de escala
-        L.control.scale().addTo(map);
-
-        // Adiciona controle de zoom
-        L.control.zoom({
-            position: 'topright'
-        }).addTo(map);
     </script>
 </body>
 </html>
