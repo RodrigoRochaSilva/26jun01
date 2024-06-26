@@ -19,7 +19,7 @@
             max-height: 800px;
             height: 100%;
         }
-        #layer-selector {
+        #layer-selector, #transparency-slider {
             position: absolute;
             top: 10px;
             right: 10px;
@@ -28,6 +28,10 @@
             padding: 5px;
             border-radius: 5px;
             box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+        }
+        #transparency-slider {
+            top: 60px;
+            width: 200px;
         }
         .label-style {
             font-size: 10px;
@@ -44,6 +48,10 @@
             <option value="vari">VARI</option>
         </select>
     </div>
+    <div id="transparency-slider">
+        <label for="transparency">Transparência da camada vetorial:</label>
+        <input type="range" id="transparency" min="0" max="50" value="0">
+    </div>
 
     <script>
         // Inicializa o mapa com valores temporários
@@ -57,6 +65,7 @@
         }).addTo(map);
 
         let currentOverlay;
+        let gradeLayer;
 
         // Função para adicionar uma camada de imagem ao mapa
         function addImageOverlay(imageUrl, bounds) {
@@ -106,11 +115,14 @@
         fetch('camadas/grade.geojson')
             .then(response => response.json())
             .then(data => {
-                L.geoJSON(data, {
-                    style: {
-                        color: 'black',
-                        weight: 3,
-                        fill: false
+                gradeLayer = L.geoJSON(data, {
+                    style: function() {
+                        return {
+                            color: 'black',
+                            weight: 3,
+                            fill: false,
+                            fillOpacity: 0 // Transparência padrão (0 = 100% opaco)
+                        };
                     },
                     onEachFeature: function (feature, layer) {
                         if (feature.properties && feature.properties.score) {
@@ -129,6 +141,30 @@
                 console.error('Erro ao carregar o arquivo GeoJSON:', error);
             });
 
+        // Função para atualizar a transparência da camada vetorial
+        function updateTransparency(value) {
+            if (gradeLayer) {
+                gradeLayer.eachLayer(function(layer) {
+                    layer.setStyle({
+                        fillOpacity: value / 100
+                    });
+                });
+            }
+        }
+
+        // Adiciona um listener para o controle deslizante de transparência
+        document.getElementById('transparency').addEventListener('input', function(e) {
+            const transparencyValue = e.target.value;
+            updateTransparency(transparencyValue);
+        });
+
+        // Adiciona controle de escala
+        L.control.scale().addTo(map);
+
+        // Adiciona controle de zoom
+        L.control.zoom({
+            position: 'topright'
+        }).addTo(map);
     </script>
 </body>
 </html>
