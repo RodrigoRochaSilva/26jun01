@@ -61,7 +61,7 @@
     </div>
     <div id="transparency-control">
         <label for="transparency">Transparência da camada vetorial (%):</label>
-        <input type="range" id="transparency" min="0" max="50" value="0">
+        <input type="range" id="transparency" min="0" max="80" value="0">
     </div>
     <div class="feature-count" id="feature-count">
         Total de Feições: 0
@@ -82,6 +82,7 @@
         let gradeLayer;
         let labelLayers = [];
         let featureCount = 0;
+        let selectedFeatures = new Set();
 
         // Função para adicionar uma camada de imagem ao mapa
         function addImageOverlay(imageUrl, bounds) {
@@ -127,6 +128,29 @@
                 console.error('Erro ao carregar o arquivo de coordenadas:', error);
             });
 
+        // Função para destacar uma feição
+        function highlightFeature(e) {
+            const layer = e.target;
+
+            if (selectedFeatures.has(layer)) {
+                layer.setStyle({
+                    color: 'black',
+                    weight: 3,
+                    fillOpacity: 0,
+                    fillColor: ''
+                });
+                selectedFeatures.delete(layer);
+            } else {
+                layer.setStyle({
+                    color: 'blue',
+                    weight: 3,
+                    fillOpacity: 0.25,
+                    fillColor: 'white'
+                });
+                selectedFeatures.add(layer);
+            }
+        }
+
         // Adiciona a camada vetorial "grade" com rótulos
         fetch('camadas/grade.geojson')
             .then(response => response.json())
@@ -144,6 +168,10 @@
                         };
                     },
                     onEachFeature: function (feature, layer) {
+                        layer.on({
+                            click: highlightFeature
+                        });
+
                         if (feature.properties && feature.properties.score) {
                             const centroid = layer.getBounds().getCenter();
                             const label = L.marker(centroid, {
@@ -171,7 +199,7 @@
                 gradeLayer.eachLayer(function(layer) {
                     layer.setStyle({
                         opacity: opacityValue,
-                        fillOpacity: 0 // Mantém o preenchimento transparente
+                        fillOpacity: selectedFeatures.has(layer) ? 0.25 : 0 // Mantém o preenchimento transparente
                     });
                 });
                 labelLayers.forEach(function(label) {
