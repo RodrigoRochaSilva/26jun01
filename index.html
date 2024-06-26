@@ -111,6 +111,18 @@
                 console.error('Erro ao carregar o arquivo de coordenadas:', error);
             });
 
+        // Função para atualizar a transparência da camada vetorial
+        function updateTransparency(value) {
+            if (gradeLayer) {
+                gradeLayer.eachLayer(function(layer) {
+                    layer.setStyle({
+                        opacity: 1 - (value / 100),
+                        fillOpacity: 0
+                    });
+                });
+            }
+        }
+
         // Adiciona a camada vetorial "grade" com rótulos
         fetch('camadas/grade.geojson')
             .then(response => response.json())
@@ -120,8 +132,7 @@
                         return {
                             color: 'black',
                             weight: 3,
-                            fill: false,
-                            fillOpacity: 0 // Transparência padrão (0 = 100% opaco)
+                            fill: false
                         };
                     },
                     onEachFeature: function (feature, layer) {
@@ -136,27 +147,27 @@
                         }
                     }
                 }).addTo(map);
+
+                // Configura a transparência inicial
+                updateTransparency(document.getElementById('transparency').value);
             })
             .catch(error => {
                 console.error('Erro ao carregar o arquivo GeoJSON:', error);
             });
-
-        // Função para atualizar a transparência da camada vetorial
-        function updateTransparency(value) {
-            if (gradeLayer) {
-                gradeLayer.eachLayer(function(layer) {
-                    layer.setStyle({
-                        fillOpacity: value / 100
-                    });
-                });
-            }
-        }
 
         // Adiciona um listener para o controle deslizante de transparência
         document.getElementById('transparency').addEventListener('input', function(e) {
             const transparencyValue = e.target.value;
             updateTransparency(transparencyValue);
         });
+
+        // Adiciona controle de escala
+        L.control.scale().addTo(map);
+
+        // Adiciona controle de zoom
+        L.control.zoom({
+            position: 'topright'
+        }).addTo(map);
     </script>
 </body>
 </html>
