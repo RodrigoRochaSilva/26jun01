@@ -5,11 +5,13 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <style>
-        #map { height: 600px; } 
+        #map { height: 600px; }
+        #info { position: absolute; top: 10px; right: 10px; background: white; padding: 10px; }
     </style>
 </head>
 <body>
     <div id="map"></div>
+    <div id="info"></div>
 
     <script>
         // 1. Definição da projeção EPSG:4326
@@ -42,6 +44,20 @@
                 const centerLat = (coords[1] + coords[3]) / 2;
                 const centerLng = (coords[0] + coords[2]) / 2;
                 map.setView([centerLat, centerLng], map.getZoom());
+
+                // Exibição das coordenadas
+                const infoDiv = document.getElementById('info');
+                infoDiv.innerHTML = `
+                    <b>Coordenadas de Borda:</b><br>
+                    Oeste: ${coords[0].toFixed(6)}<br>
+                    Sul: ${coords[1].toFixed(6)}<br>
+                    Leste: ${coords[2].toFixed(6)}<br>
+                    Norte: ${coords[3].toFixed(6)}<br>
+                    <br>
+                    <b>Coordenadas Centrais:</b><br>
+                    Latitude: ${centerLat.toFixed(6)}<br>
+                    Longitude: ${centerLng.toFixed(6)}
+                `;
             });
     </script>
 </body>
