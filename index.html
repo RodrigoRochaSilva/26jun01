@@ -11,6 +11,9 @@
     <!-- Incluindo a biblioteca Leaflet JS -->
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
+    <!-- Incluindo a biblioteca shapefile JS para exportar Shapefiles -->
+    <script src="https://unpkg.com/shapefile@0.6.9"></script>
+    
     <style>
         #map {
             margin: 0 auto;
@@ -347,9 +350,34 @@
         // Adiciona um listener para o botão "validar"
         document.getElementById('validate-button').addEventListener('click', validateAndApplyValue);
 
+        // Função para converter uma camada vetorial para o formato Shapefile
+        function geoJsonToShapefile(geoJson, filename) {
+            const options = {
+                folder: 'myshapes',
+                types: {
+                    point: 'mypoints',
+                    polygon: filename
+                }
+            };
+
+            shpwrite.download(geoJson, options);
+        }
+
         // Adiciona um listener para o botão "exportar"
         document.getElementById('export-button').addEventListener('click', function() {
-            alert('Função de exportação ainda não implementada.');
+            const geoJson = gradeLayer.toGeoJSON();
+            const filteredFeatures = geoJson.features.filter(feature => validatedFeatures.has(L.geoJSON(feature)));
+
+            const filteredGeoJson = {
+                type: 'FeatureCollection',
+                features: filteredFeatures
+            };
+
+            if (filteredFeatures.length > 0) {
+                geoJsonToShapefile(filteredGeoJson, 'validated_polygons');
+            } else {
+                alert('Nenhuma feição validada para exportar.');
+            }
         });
     </script>
 </body>
