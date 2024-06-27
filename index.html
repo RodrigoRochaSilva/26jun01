@@ -11,13 +11,16 @@
     <!-- Incluindo a biblioteca Leaflet JS -->
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
+    <!-- Incluindo a biblioteca jszip para criar arquivos ZIP -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.6.0/jszip.min.js"></script>
+
     <!-- Incluindo a biblioteca shp-write para gerar Shapefile -->
     <script src="https://unpkg.com/shp-write"></script>
 
     <style>
         #map {
             margin: 0 auto;
-            width: 60%;
+            width: 80%;
             min-height: 600px;
             max-height: 800px;
             height: 100%;
@@ -369,8 +372,8 @@
 
             console.log("Validated Features GeoJSON:", validatedGeoJson);
 
+            const zip = new JSZip();
             const options = {
-                folder: 'export',
                 types: {
                     point: 'points',
                     polygon: 'polygons',
@@ -378,12 +381,17 @@
                 }
             };
 
-            try {
-                shpwrite.download(validatedGeoJson, options);
-            } catch (error) {
-                console.error('Erro ao exportar Shapefile:', error);
-                alert('Erro ao exportar Shapefile. Verifique o console para mais detalhes.');
-            }
+            const shapefile = shpwrite.zip(validatedGeoJson, options);
+            zip.file("export.zip", shapefile);
+
+            zip.generateAsync({ type: "blob" }).then(function(content) {
+                const link = document.createElement("a");
+                link.href = URL.createObjectURL(content);
+                link.download = "export.zip";
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            });
         }
 
         // Adiciona um listener para o botão "exportar"
