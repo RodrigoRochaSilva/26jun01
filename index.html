@@ -19,7 +19,7 @@
             max-height: 800px;
             height: 100%;
         }
-        #layer-selector, #transparency-control {
+        #layer-selector, #transparency-control, #input-section {
             position: absolute;
             top: 10px;
             right: 10px;
@@ -31,6 +31,10 @@
         }
         #transparency-control {
             top: 60px;
+            width: 200px;
+        }
+        #input-section {
+            top: 120px;
             width: 200px;
         }
         .label-style {
@@ -68,6 +72,11 @@
     <div id="transparency-control">
         <label for="transparency">Transparência da camada vetorial (%):</label>
         <input type="range" id="transparency" min="0" max="80" value="0">
+    </div>
+    <div id="input-section">
+        <label for="product-task">Produto ou tarefa:</label>
+        <input type="text" id="product-task" maxlength="28">
+        <button id="create-button">Criar</button>
     </div>
     <div class="feature-count" id="feature-count">
         Total de Feições: 0
@@ -251,6 +260,23 @@
             const transparencyValue = e.target.value;
             updateTransparency(transparencyValue);
         });
+
+        // Função para criar uma nova tabela com o nome informado no input
+        function createTable() {
+            const input = document.getElementById('product-task');
+            const tableName = input.value.trim();
+
+            if (tableName) {
+                // Aqui você pode adicionar o código para criar a tabela no arquivo "grade"
+                console.log('Tabela criada com o nome:', tableName);
+                // Por exemplo, você pode enviar uma requisição para o servidor para criar a tabela
+            } else {
+                console.log('O nome da tabela não pode estar vazio');
+            }
+        }
+
+        // Adiciona um listener para o botão "Criar"
+        document.getElementById('create-button').addEventListener('click', createTable);
 
     </script>
 </body>
