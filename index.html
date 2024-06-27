@@ -92,7 +92,7 @@
     </div>
     <div id="transparency-control">
         <label for="transparency">Transparência da camada vetorial (%):</label>
-        <input type="range" id="transparency" min="0" max="85" value="0">
+        <input type="range" id="transparency" min="0" max="90" value="0">
     </div>
     <div id="input-container">
         <label for="product-input">Produto ou tarefa:</label>
@@ -177,6 +177,10 @@
         // Função para destacar uma feição
         function highlightFeature(e) {
             const layer = e.target;
+
+            if (validatedFeatures.has(layer)) {
+                return; // Ignora as feições validadas
+            }
 
             if (selectedFeatures.has(layer)) {
                 layer.setStyle({
@@ -315,7 +319,7 @@
                     layer.setStyle({
                         color: 'gray',
                         weight: 3,
-                        fillOpacity: 0.8,
+                        fillOpacity: 0.5,
                         fillColor: 'gray'
                     });
 
