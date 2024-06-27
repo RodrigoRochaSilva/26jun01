@@ -7,10 +7,12 @@
 
     <!-- Incluindo a biblioteca Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+
     <!-- Incluindo a biblioteca Leaflet JS -->
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-    <!-- Incluindo a biblioteca FileSaver.js para salvar o arquivo -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
+    <!-- Incluindo a biblioteca Leaflet Shapefile JS -->
+    <script src="https://unpkg.com/shpjs@latest/dist/shp.min.js"></script>
 
     <style>
         #map {
@@ -20,7 +22,7 @@
             max-height: 800px;
             height: 100%;
         }
-        #layer-selector, #transparency-control, #input-container, #additional-input-container {
+        #layer-selector {
             position: absolute;
             top: 10px;
             right: 10px;
@@ -29,57 +31,6 @@
             padding: 5px;
             border-radius: 5px;
             box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
-        }
-        #transparency-control {
-            top: 60px;
-            width: 200px;
-        }
-        #input-container {
-            top: 120px;
-            width: 200px;
-        }
-        #additional-input-container {
-            top: 180px;
-            width: 200px;
-        }
-        .label-style {
-            font-size: 10px;
-            color: black;
-            opacity: 1; /* Transparência padrão */
-        }
-        .validated-label-style {
-            font-size: 14px;
-            color: red;
-            opacity: 1; /* Transparência padrão */
-            text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff; /* Buffer discreto na cor branca */
-        }
-        .feature-count {
-            position: absolute;
-            bottom: 10px;
-            left: 10px;
-            background: white;
-            padding: 5px;
-            border-radius: 5px;
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
-            z-index: 1000;
-        }
-        #validate-button {
-            background-color: green;
-            width: 40px;
-            height: 20px;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        #export-button {
-            background-color: blue;
-            width: 40px;
-            height: 20px;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
         }
     </style>
 </head>
@@ -91,26 +42,6 @@
             <option value="ortofoto">Ortofoto</option>
             <option value="vari">VARI</option>
         </select>
-    </div>
-    <div id="transparency-control">
-        <label for="transparency">Transparência da camada vetorial (%):</label>
-        <input type="range" id="transparency" min="0" max="70" value="0">
-    </div>
-    <div id="input-container">
-        <label for="product-input">Produto ou tarefa:</label>
-        <input type="text" id="product-input" maxlength="24">
-        <button id="create-button">Criar</button>
-    </div>
-    <div id="additional-input-container">
-        <label for="rate-id-input">Taxa ou ID:</label>
-        <input type="text" id="rate-id-input" maxlength="9" pattern="\d*">
-        <div style="display: flex; justify-content: space-between; margin-top: 5px;">
-            <button id="validate-button">Validar</button>
-            <button id="export-button">Exportar</button>
-        </div>
-    </div>
-    <div class="feature-count" id="feature-count">
-        Total de Feições: 0
     </div>
 
     <script>
@@ -125,12 +56,6 @@
         }).addTo(map);
 
         let currentOverlay;
-        let gradeLayer;
-        let labelLayers = [];
-        let featureCount = 0;
-        let selectedFeatures = new Set();
-        let validatedFeatures = new Set();
-        let newFieldName = '';
 
         // Função para adicionar uma camada de imagem ao mapa
         function addImageOverlay(imageUrl, bounds) {
@@ -176,202 +101,29 @@
                 console.error('Erro ao carregar o arquivo de coordenadas:', error);
             });
 
-        // Função para destacar uma feição
-        function highlightFeature(e) {
-            const layer = e.target;
-
-            if (validatedFeatures.has(layer)) {
-                return; // Ignora as feições validadas
-            }
-
-            if (selectedFeatures.has(layer)) {
-                layer.setStyle({
-                    color: 'black',
-                    weight: 3,
-                    fillOpacity: 0,
-                    fillColor: ''
-                });
-                selectedFeatures.delete(layer);
-            } else {
-                layer.setStyle({
-                    color: 'blue',
-                    weight: 3,
-                    fillOpacity: 0.25,
-                    fillColor: 'white'
-                });
-                selectedFeatures.add(layer);
-            }
-        }
-
-        // Adiciona a camada vetorial "grade" com rótulos
-        fetch('camadas/grade.geojson')
-            .then(response => response.json())
-            .then(data => {
-                featureCount = data.features.length;
-                document.getElementById('feature-count').innerText = 'Total de Feições: ' + featureCount;
-
-                gradeLayer = L.geoJSON(data, {
-                    style: function() {
-                        return {
-                            color: 'black',
-                            weight: 3,
-                            fillOpacity: 0, // Mantém o preenchimento transparente
-                            opacity: 1 // Transparência padrão (1 = 100% opaco)
-                        };
-                    },
-                    onEachFeature: function (feature, layer) {
-                        layer.on({
-                            click: highlightFeature
-                        });
-
-                        if (feature.properties && feature.properties.score) {
-                            const centroid = layer.getBounds().getCenter();
-                            const label = L.marker(centroid, {
-                                icon: L.divIcon({
-                                    className: 'label-style',
-                                    html: feature.properties.score
-                                })
-                            }).addTo(map);
-                            label.on('click', function() {
-                                highlightFeature({ target: layer });
-                            });
-                            labelLayers.push(label); // Adiciona o rótulo à lista
-                        }
-                    }
-                }).addTo(map);
-
-                // Configura a transparência inicial
-                updateTransparency(document.getElementById('transparency').value);
-            })
-            .catch(error => {
-                console.error('Erro ao carregar o arquivo GeoJSON:', error);
-            });
-
-        // Função para atualizar a transparência da camada vetorial e dos rótulos
-        function updateTransparency(value) {
-            if (gradeLayer) {
-                const opacityValue = 1 - (value / 100); // Converte o valor do controle deslizante para opacidade
-                gradeLayer.eachLayer(function(layer) {
-                    layer.setStyle({
-                        opacity: opacityValue,
-                        fillOpacity: selectedFeatures.has(layer) ? 0.25 : 0 // Mantém o preenchimento transparente
-                    });
-                });
-                labelLayers.forEach(function(label) {
-                    const labelElement = label.getElement();
-                    if (labelElement) {
-                        labelElement.style.opacity = opacityValue;
-                    }
-                });
-            }
-        }
-
-        // Adiciona um listener para o controle de transparência
-        document.getElementById('transparency').addEventListener('input', function(e) {
-            const transparencyValue = e.target.value;
-            updateTransparency(transparencyValue);
-        });
-
-        // Adiciona um listener para o botão "criar"
-        document.getElementById('create-button').addEventListener('click', function() {
-            const productInput = document.getElementById('product-input').value.trim();
-            if (productInput) {
-                // Adiciona uma nova tabela ao arquivo GeoJSON
-                addNewFieldToGeoJson('camadas/grade.geojson', productInput);
-                newFieldName = productInput;
-                // Habilita o input "Taxa ou ID" e os botões "Validar" e "Exportar"
-                document.getElementById('rate-id-input').disabled = false;
-                document.getElementById('validate-button').disabled = false;
-                document.getElementById('export-button').disabled = false;
-            }
-        });
-
-        // Função para adicionar um novo campo ao GeoJSON
-        function addNewFieldToGeoJson(url, fieldName) {
+        // Função para adicionar a camada vetorial a partir do shapefile
+        function addShapefileLayer(url) {
             fetch(url)
-                .then(response => response.json())
-                .then(data => {
-                    data.features.forEach(feature => {
-                        feature.properties[fieldName] = null;
+                .then(response => response.arrayBuffer())
+                .then(buffer => {
+                    shp(buffer).then(geojson => {
+                        L.geoJson(geojson, {
+                            style: {
+                                color: 'black',
+                                weight: 3,
+                                fill: false
+                            }
+                        }).addTo(map);
                     });
-                    // Ação após a adição do novo campo ao GeoJSON
-                    console.log('Novo campo adicionado:', fieldName);
-                    alert('Novo campo adicionado: ' + fieldName);
-                    // Você pode implementar a lógica para salvar o novo GeoJSON no servidor, se necessário
                 })
                 .catch(error => {
-                    console.error('Erro ao adicionar o novo campo ao GeoJSON:', error);
+                    console.error('Erro ao carregar o shapefile:', error);
                 });
         }
 
-        // Inicializa o estado dos elementos "Taxa ou ID" e os botões "Validar" e "Exportar" como desabilitados
-        document.getElementById('rate-id-input').disabled = true;
-        document.getElementById('validate-button').disabled = true;
-        document.getElementById('export-button').disabled = true;
+        // Adiciona a camada vetorial 'grade.shp'
+        addShapefileLayer('camadas/grade.shp');
 
-        // Função para validar e aplicar o valor às feições selecionadas
-        function validateAndApplyValue() {
-            const rateIdValue = document.getElementById('rate-id-input').value.trim();
-            if (rateIdValue) {
-                selectedFeatures.forEach(layer => {
-                    // Atualiza o valor do novo campo na feição
-                    layer.feature.properties[newFieldName] = rateIdValue;
-
-                    // Estilo para feições validadas
-                    layer.setStyle({
-                        color: 'gray',
-                        weight: 3,
-                        fillOpacity: 0.5,
-                        fillColor: 'gray'
-                    });
-
-                    // Adiciona rótulo com o valor validado
-                    const centroid = layer.getBounds().getCenter();
-                    const label = L.marker(centroid, {
-                        icon: L.divIcon({
-                            className: 'validated-label-style',
-                            html: rateIdValue
-                        })
-                    }).addTo(map);
-
-                    // Remove a feição das selecionadas e adiciona às validadas
-                    selectedFeatures.delete(layer);
-                    validatedFeatures.add(layer);
-                });
-
-                // Limpa o input "Taxa ou ID"
-                document.getElementById('rate-id-input').value = '';
-            } else {
-                alert('Por favor, insira um valor válido.');
-            }
-        }
-
-        // Adiciona um listener para o botão "validar"
-        document.getElementById('validate-button').addEventListener('click', validateAndApplyValue);
-
-        // Função para exportar as feições validadas em formato GeoJSON
-        function exportValidatedFeatures() {
-            if (validatedFeatures.size === 0) {
-                alert('Nenhuma feição validada para exportar.');
-                return;
-            }
-
-            const features = [];
-            validatedFeatures.forEach(layer => {
-                features.push(layer.toGeoJSON().feature);
-            });
-
-            const geojson = {
-                type: "FeatureCollection",
-                features: features
-            };
-
-            const blob = new Blob([JSON.stringify(geojson)], { type: "application/json" });
-            saveAs(blob, "validated_features.geojson");
-        }
-
-        // Adiciona um listener para o botão "exportar"
-        document.getElementById('export-button').addEventListener('click', exportValidatedFeatures);
     </script>
 </body>
 </html>
