@@ -17,7 +17,7 @@
     <style>
         #map {
             margin: 0 auto;
-            width: 80%;
+            width: 60%;
             min-height: 600px;
             max-height: 800px;
             height: 100%;
@@ -352,6 +352,7 @@
 
         // Função para exportar os dados validados como Shapefile
         function exportValidatedFeatures() {
+            console.log("Export button clicked");
             const validatedGeoJson = {
                 type: "FeatureCollection",
                 features: []
@@ -366,6 +367,8 @@
                 return;
             }
 
+            console.log("Validated Features GeoJSON:", validatedGeoJson);
+
             const options = {
                 folder: 'export',
                 types: {
@@ -375,7 +378,12 @@
                 }
             };
 
-            shpwrite.download(validatedGeoJson, options);
+            try {
+                shpwrite.download(validatedGeoJson, options);
+            } catch (error) {
+                console.error('Erro ao exportar Shapefile:', error);
+                alert('Erro ao exportar Shapefile. Verifique o console para mais detalhes.');
+            }
         }
 
         // Adiciona um listener para o botão "exportar"
