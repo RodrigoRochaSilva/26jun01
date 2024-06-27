@@ -38,7 +38,7 @@
             color: black;
             opacity: 1; /* Transparência padrão */
         }
-        .feature-count, .selected-feature-count {
+        .feature-count, .selected-feature-count, .selected-area {
             position: absolute;
             bottom: 10px;
             left: 10px;
@@ -50,6 +50,9 @@
         }
         .selected-feature-count {
             bottom: 40px;
+        }
+        .selected-area {
+            bottom: 70px;
         }
     </style>
 </head>
@@ -71,6 +74,9 @@
     </div>
     <div class="selected-feature-count" id="selected-feature-count">
         Feições Selecionadas: 0
+    </div>
+    <div class="selected-area" id="selected-area">
+        Área Selecionada: 0 ha
     </div>
 
     <script>
@@ -157,12 +163,24 @@
             }
 
             countSelectedFeatures();
+            calculateSelectedArea();
         }
 
         // Função para contar feições selecionadas
         function countSelectedFeatures() {
             const selectedCount = selectedFeatures.size;
             document.getElementById('selected-feature-count').innerText = 'Feições Selecionadas: ' + selectedCount;
+        }
+
+        // Função para calcular a área total das feições selecionadas
+        function calculateSelectedArea() {
+            let totalArea = 0;
+            selectedFeatures.forEach(function(layer) {
+                if (layer.feature.properties && layer.feature.properties.area) {
+                    totalArea += layer.feature.properties.area;
+                }
+            });
+            document.getElementById('selected-area').innerText = 'Área Selecionada: ' + totalArea.toFixed(2) + ' ha';
         }
 
         // Adiciona a camada vetorial "grade" com rótulos
