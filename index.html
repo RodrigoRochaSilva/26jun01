@@ -17,7 +17,7 @@
     <style>
         #map {
             margin: 0 auto;
-            width: 60%;
+            width: 80%;
             min-height: 600px;
             max-height: 800px;
             height: 100%;
@@ -360,6 +360,11 @@
             validatedFeatures.forEach(layer => {
                 validatedGeoJson.features.push(layer.feature);
             });
+
+            if (validatedGeoJson.features.length === 0) {
+                alert('Nenhuma feição validada para exportar.');
+                return;
+            }
 
             const options = {
                 folder: 'export',
