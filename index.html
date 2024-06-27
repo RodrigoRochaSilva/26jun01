@@ -46,6 +46,11 @@
             color: black;
             opacity: 1; /* Transparência padrão */
         }
+        .validated-label-style {
+            font-size: 14px;
+            color: red;
+            opacity: 1; /* Transparência padrão */
+        }
         .feature-count {
             position: absolute;
             bottom: 10px;
@@ -87,7 +92,7 @@
     </div>
     <div id="transparency-control">
         <label for="transparency">Transparência da camada vetorial (%):</label>
-        <input type="range" id="transparency" min="0" max="50" value="0">
+        <input type="range" id="transparency" min="0" max="85" value="0">
     </div>
     <div id="input-container">
         <label for="product-input">Produto ou tarefa:</label>
@@ -122,6 +127,8 @@
         let labelLayers = [];
         let featureCount = 0;
         let selectedFeatures = new Set();
+        let validatedFeatures = new Set();
+        let newFieldName = '';
 
         // Função para adicionar uma camada de imagem ao mapa
         function addImageOverlay(imageUrl, bounds) {
@@ -247,7 +254,7 @@
                 labelLayers.forEach(function(label) {
                     const labelElement = label.getElement();
                     if (labelElement) {
-                        labelElement.style.opacity = opacityValue
+                        labelElement.style.opacity = opacityValue;
                     }
                 });
             }
@@ -265,6 +272,7 @@
             if (productInput) {
                 // Adiciona uma nova tabela ao arquivo GeoJSON
                 addNewFieldToGeoJson('camadas/grade.geojson', productInput);
+                newFieldName = productInput;
                 // Habilita o input "Taxa ou ID" e os botões "Validar" e "Exportar"
                 document.getElementById('rate-id-input').disabled = false;
                 document.getElementById('validate-button').disabled = false;
@@ -295,15 +303,45 @@
         document.getElementById('validate-button').disabled = true;
         document.getElementById('export-button').disabled = true;
 
-        // Adiciona um listener para o botão "validar"
-        document.getElementById('validate-button').addEventListener('click', function() {
+        // Função para validar e aplicar o valor às feições selecionadas
+        function validateAndApplyValue() {
             const rateIdValue = document.getElementById('rate-id-input').value.trim();
             if (rateIdValue) {
-                alert('Valor válido: ' + rateIdValue);
+                selectedFeatures.forEach(layer => {
+                    // Atualiza o valor do novo campo na feição
+                    layer.feature.properties[newFieldName] = rateIdValue;
+
+                    // Estilo para feições validadas
+                    layer.setStyle({
+                        color: 'gray',
+                        weight: 3,
+                        fillOpacity: 0.5,
+                        fillColor: 'gray'
+                    });
+
+                    // Adiciona rótulo com o valor validado
+                    const centroid = layer.getBounds().getCenter();
+                    const label = L.marker(centroid, {
+                        icon: L.divIcon({
+                            className: 'validated-label-style',
+                            html: rateIdValue
+                        })
+                    }).addTo(map);
+
+                    // Remove a feição das selecionadas e adiciona às validadas
+                    selectedFeatures.delete(layer);
+                    validatedFeatures.add(layer);
+                });
+
+                // Limpa o input "Taxa ou ID"
+                document.getElementById('rate-id-input').value = '';
             } else {
                 alert('Por favor, insira um valor válido.');
             }
-        });
+        }
+
+        // Adiciona um listener para o botão "validar"
+        document.getElementById('validate-button').addEventListener('click', validateAndApplyValue);
 
         // Adiciona um listener para o botão "exportar"
         document.getElementById('export-button').addEventListener('click', function() {
@@ -312,10 +350,3 @@
     </script>
 </body>
 </html>
-
-                        
-                        
-                        
-
-
-                        
