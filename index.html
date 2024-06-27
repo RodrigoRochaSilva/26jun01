@@ -7,9 +7,10 @@
 
     <!-- Incluindo a biblioteca Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-
     <!-- Incluindo a biblioteca Leaflet JS -->
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <!-- Incluindo a biblioteca FileSaver.js para salvar o arquivo -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
     <style>
         #map {
@@ -348,10 +349,29 @@
         // Adiciona um listener para o botão "validar"
         document.getElementById('validate-button').addEventListener('click', validateAndApplyValue);
 
+        // Função para exportar as feições validadas em formato GeoJSON
+        function exportValidatedFeatures() {
+            if (validatedFeatures.size === 0) {
+                alert('Nenhuma feição validada para exportar.');
+                return;
+            }
+
+            const features = [];
+            validatedFeatures.forEach(layer => {
+                features.push(layer.toGeoJSON().feature);
+            });
+
+            const geojson = {
+                type: "FeatureCollection",
+                features: features
+            };
+
+            const blob = new Blob([JSON.stringify(geojson)], { type: "application/json" });
+            saveAs(blob, "validated_features.geojson");
+        }
+
         // Adiciona um listener para o botão "exportar"
-        document.getElementById('export-button').addEventListener('click', function() {
-            alert('Função de exportação ainda não implementada.');
-        });
+        document.getElementById('export-button').addEventListener('click', exportValidatedFeatures);
     </script>
 </body>
 </html>
