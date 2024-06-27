@@ -11,9 +11,13 @@
     <!-- Incluindo a biblioteca Leaflet JS -->
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
-    <!-- Incluindo a biblioteca shapefile JS para exportar Shapefiles -->
-    <script src="https://unpkg.com/shapefile@0.6.9"></script>
-    
+    <!-- Incluindo a biblioteca Terraformer para manipulação de GeoJSON -->
+    <script src="https://unpkg.com/terraformer"></script>
+    <script src="https://unpkg.com/terraformer-arcgis-parser"></script>
+
+    <!-- Incluindo a biblioteca shp-write para gerar Shapefile -->
+    <script src="https://unpkg.com/shp-write"></script>
+
     <style>
         #map {
             margin: 0 auto;
@@ -350,35 +354,31 @@
         // Adiciona um listener para o botão "validar"
         document.getElementById('validate-button').addEventListener('click', validateAndApplyValue);
 
-        // Função para converter uma camada vetorial para o formato Shapefile
-        function geoJsonToShapefile(geoJson, filename) {
+        // Função para exportar os dados validados como Shapefile
+        function exportValidatedFeatures() {
+            const validatedGeoJson = {
+                type: "FeatureCollection",
+                features: []
+            };
+
+            validatedFeatures.forEach(layer => {
+                validatedGeoJson.features.push(layer.feature);
+            });
+
             const options = {
-                folder: 'myshapes',
+                folder: 'export',
                 types: {
-                    point: 'mypoints',
-                    polygon: filename
+                    point: 'points',
+                    polygon: 'polygons',
+                    polyline: 'polyline'
                 }
             };
 
-            shpwrite.download(geoJson, options);
+            shpwrite.download(validatedGeoJson, options);
         }
 
         // Adiciona um listener para o botão "exportar"
-        document.getElementById('export-button').addEventListener('click', function() {
-            const geoJson = gradeLayer.toGeoJSON();
-            const filteredFeatures = geoJson.features.filter(feature => validatedFeatures.has(L.geoJSON(feature)));
-
-            const filteredGeoJson = {
-                type: 'FeatureCollection',
-                features: filteredFeatures
-            };
-
-            if (filteredFeatures.length > 0) {
-                geoJsonToShapefile(filteredGeoJson, 'validated_polygons');
-            } else {
-                alert('Nenhuma feição validada para exportar.');
-            }
-        });
+        document.getElementById('export-button').addEventListener('click', exportValidatedFeatures);
     </script>
 </body>
 </html>
