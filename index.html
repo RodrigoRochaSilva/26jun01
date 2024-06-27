@@ -50,6 +50,7 @@
             font-size: 14px;
             color: red;
             opacity: 1; /* Transparência padrão */
+            text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff; /* Buffer discreto na cor branca */
         }
         .feature-count {
             position: absolute;
@@ -92,7 +93,7 @@
     </div>
     <div id="transparency-control">
         <label for="transparency">Transparência da camada vetorial (%):</label>
-        <input type="range" id="transparency" min="0" max="90" value="0">
+        <input type="range" id="transparency" min="0" max="70" value="0">
     </div>
     <div id="input-container">
         <label for="product-input">Produto ou tarefa:</label>
