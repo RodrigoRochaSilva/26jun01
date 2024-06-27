@@ -268,9 +268,11 @@
 
             if (tableName) {
                 // Aqui você pode adicionar o código para criar a tabela no arquivo "grade"
+                alert('Tabela criada com o nome: ' + tableName);
                 console.log('Tabela criada com o nome:', tableName);
                 // Por exemplo, você pode enviar uma requisição para o servidor para criar a tabela
             } else {
+                alert('O nome da tabela não pode estar vazio');
                 console.log('O nome da tabela não pode estar vazio');
             }
         }
