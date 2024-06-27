@@ -11,15 +11,12 @@
     <!-- Incluindo a biblioteca Leaflet JS -->
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
-    <!-- Incluindo a biblioteca Leaflet Shapefile JS -->
-    <script src="https://unpkg.com/shpjs@latest/dist/shp.min.js"></script>
+    <!-- Incluindo a biblioteca Leaflet Omnivore JS -->
+    <script src="https://unpkg.com/leaflet-omnivore@0.3.4/leaflet-omnivore.min.js"></script>
 
     <style>
         #map {
-            margin: 0 auto;
-            width: 80%;
-            min-height: 600px;
-            max-height: 800px;
+            width: 80%;;
             height: 100%;
         }
         #layer-selector {
@@ -103,26 +100,17 @@
 
         // Função para adicionar a camada vetorial a partir do shapefile
         function addShapefileLayer(url) {
-            fetch(url)
-                .then(response => response.arrayBuffer())
-                .then(buffer => {
-                    shp(buffer).then(geojson => {
-                        L.geoJson(geojson, {
-                            style: {
-                                color: 'black',
-                                weight: 3,
-                                fill: false
-                            }
-                        }).addTo(map);
-                    });
-                })
-                .catch(error => {
-                    console.error('Erro ao carregar o shapefile:', error);
-                });
+            omnivore.shp(url, null, L.geoJson(null, {
+                style: {
+                    color: 'black',
+                    weight: 3,
+                    fill: false
+                }
+            })).addTo(map);
         }
 
         // Adiciona a camada vetorial 'grade.shp'
-        addShapefileLayer('camadas/grade.shp');
+        addShapefileLayer('camadas/grade.zip');
 
     </script>
 </body>
