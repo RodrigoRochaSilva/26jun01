@@ -89,8 +89,8 @@
     </div>
     <div id="id-section">
         <label for="taxa-id">Taxa ou ID:</label>
-        <input type="text" id="taxa-id" maxlength="12">
-        <button id="validate-button">Validar</button>
+        <input type="text" id="taxa-id" maxlength="12" disabled>
+        <button id="validate-button" disabled>Validar</button>
     </div>
     <div class="feature-count" id="feature-count">
         Total de Feições: 0
@@ -118,6 +118,7 @@
         let labelLayers = [];
         let featureCount = 0;
         let selectedFeatures = new Set();
+        let createdTableName = null;
 
         // Função para adicionar uma camada de imagem ao mapa
         function addImageOverlay(imageUrl, bounds) {
@@ -281,9 +282,11 @@
             const tableName = input.value.trim();
 
             if (tableName) {
+                createdTableName = tableName;
+                document.getElementById('taxa-id').disabled = false;
+                document.getElementById('validate-button').disabled = false;
                 alert('Tabela criada com o nome: ' + tableName);
                 console.log('Tabela criada com o nome:', tableName);
-                // Aqui você pode adicionar o código para criar a tabela no arquivo "grade"
             } else {
                 alert('O nome da tabela não pode estar vazio');
                 console.log('O nome da tabela não pode estar vazio');
@@ -300,6 +303,17 @@
 
             if (value) {
                 selectedFeatures.forEach(function(layer) {
+                    if (layer.feature.properties.userValue) {
+                        // Remove o rótulo anterior se existir
+                        labelLayers = labelLayers.filter(label => {
+                            if (label.getLatLng().equals(layer.getBounds().getCenter())) {
+                                map.removeLayer(label);
+                                return false;
+                            }
+                            return true;
+                        });
+                    }
+
                     layer.feature.properties.userValue = value;
                     layer.setStyle({
                         color: 'red',
