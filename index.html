@@ -54,7 +54,7 @@
             color: black;
             opacity: 1; /* Transparência padrão */
         }
-        .feature-count, .selected-feature-count, .selected-area {
+        .feature-count, .selected-feature-count, .selected-area, .total-volume {
             position: absolute;
             bottom: 10px;
             left: 10px;
@@ -69,6 +69,9 @@
         }
         .selected-area {
             bottom: 70px;
+        }
+        .total-volume {
+            bottom: 100px;
         }
         .validated-label {
             font-size: 16px;
@@ -114,6 +117,9 @@
     </div>
     <div class="selected-area" id="selected-area">
         Área Selecionada: 0 ha
+    </div>
+    <div class="total-volume" id="total-volume">
+        Volume Total: 0
     </div>
 
     <script>
@@ -219,6 +225,17 @@
                 }
             });
             document.getElementById('selected-area').innerText = 'Área Selecionada: ' + totalArea.toFixed(2) + ' ha';
+        }
+
+        // Função para calcular o volume total de produto
+        function calculateTotalVolume() {
+            let totalVolume = 0;
+            gradeLayer.eachLayer(function(layer) {
+                if (layer.feature.properties && layer.feature.properties.userValue && layer.feature.properties.area) {
+                    totalVolume += layer.feature.properties.userValue * layer.feature.properties.area;
+                }
+            });
+            document.getElementById('total-volume').innerText = 'Volume Total: ' + totalVolume.toFixed(2);
         }
 
         // Adiciona a camada vetorial "grade" com rótulos
@@ -330,7 +347,7 @@
                         });
                     }
 
-                    layer.feature.properties.userValue = value;
+                    layer.feature.properties.userValue = parseFloat(value);
                     layer.setStyle({
                         color: 'red',
                         weight: 3,
@@ -355,6 +372,8 @@
                 countSelectedFeatures();
                 // Atualiza a área das feições selecionadas
                 calculateSelectedArea();
+                // Atualiza o volume total
+                calculateTotalVolume();
             } else {
                 alert('O valor da Taxa ou ID não pode estar vazio');
                 console.log('O valor da Taxa ou ID não pode estar vazio');
