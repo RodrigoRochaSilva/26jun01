@@ -19,7 +19,7 @@
             max-height: 800px;
             height: 100%;
         }
-        #layer-selector, #transparency-control, #input-section, #id-section, #select-all-section {
+        #layer-selector, #transparency-control, #input-section, #id-section, #select-all-section, #clear-all-section {
             position: absolute;
             top: 10px;
             right: 10px;
@@ -43,6 +43,10 @@
         }
         #select-all-section {
             top: 260px;
+            width: 200px;
+        }
+        #clear-all-section {
+            top: 330px;
             width: 200px;
         }
         .label-style {
@@ -98,6 +102,9 @@
     </div>
     <div id="select-all-section">
         <button id="select-all-button">Selecionar todas as células</button>
+    </div>
+    <div id="clear-all-section">
+        <button id="clear-all-button">Limpar tudo</button>
     </div>
     <div class="feature-count" id="feature-count">
         Total de Feições: 0
@@ -373,8 +380,27 @@
             calculateSelectedArea();
         }
 
+        // Função para desselecionar todas as feições
+        function clearAllSelections() {
+            selectedFeatures.forEach(function(layer) {
+                layer.setStyle({
+                    color: 'black',
+                    weight: 3,
+                    fillOpacity: 0,
+                    fillColor: ''
+                });
+            });
+            selectedFeatures.clear();
+
+            countSelectedFeatures();
+            calculateSelectedArea();
+        }
+
         // Adiciona um listener para o botão "Selecionar todas as células"
         document.getElementById('select-all-button').addEventListener('click', selectAllFeatures);
+
+        // Adiciona um listener para o botão "Limpar tudo"
+        document.getElementById('clear-all-button').addEventListener('click', clearAllSelections);
 
     </script>
 </body>
