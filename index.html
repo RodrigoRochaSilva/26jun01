@@ -19,7 +19,7 @@
             max-height: 800px;
             height: 100%;
         }
-        #layer-selector, #transparency-control, #input-section, #id-section {
+        #layer-selector, #transparency-control, #input-section, #id-section, #select-all-section {
             position: absolute;
             top: 10px;
             right: 10px;
@@ -39,6 +39,10 @@
         }
         #id-section {
             top: 190px;
+            width: 200px;
+        }
+        #select-all-section {
+            top: 260px;
             width: 200px;
         }
         .label-style {
@@ -91,6 +95,9 @@
         <label for="taxa-id">Taxa ou ID:</label>
         <input type="text" id="taxa-id" maxlength="12" disabled>
         <button id="validate-button" disabled>Validar</button>
+    </div>
+    <div id="select-all-section">
+        <button id="select-all-button">Selecionar todas as células</button>
     </div>
     <div class="feature-count" id="feature-count">
         Total de Feições: 0
@@ -347,6 +354,27 @@
 
         // Adiciona um listener para o botão "Validar"
         document.getElementById('validate-button').addEventListener('click', validateSelectedFeatures);
+
+        // Função para selecionar todas as feições
+        function selectAllFeatures() {
+            gradeLayer.eachLayer(function(layer) {
+                if (!selectedFeatures.has(layer)) {
+                    layer.setStyle({
+                        color: 'blue',
+                        weight: 3,
+                        fillOpacity: 0.25,
+                        fillColor: 'white'
+                    });
+                    selectedFeatures.add(layer);
+                }
+            });
+
+            countSelectedFeatures();
+            calculateSelectedArea();
+        }
+
+        // Adiciona um listener para o botão "Selecionar todas as células"
+        document.getElementById('select-all-button').addEventListener('click', selectAllFeatures);
 
     </script>
 </body>
