@@ -101,10 +101,10 @@
         <button id="validate-button" disabled>Validar</button>
     </div>
     <div id="select-all-section">
-        <button id="select-all-button">Selecionar todas as células</button>
+        <button id="select-all-button" disabled>Selecionar todas as células</button>
     </div>
     <div id="clear-all-section">
-        <button id="clear-all-button">Limpar tudo</button>
+        <button id="clear-all-button" disabled>Limpar tudo</button>
     </div>
     <div class="feature-count" id="feature-count">
         Total de Feições: 0
@@ -299,6 +299,8 @@
                 createdTableName = tableName;
                 document.getElementById('taxa-id').disabled = false;
                 document.getElementById('validate-button').disabled = false;
+                document.getElementById('select-all-button').disabled = false;
+                document.getElementById('clear-all-button').disabled = false;
                 alert('Tabela criada com o nome: ' + tableName);
                 console.log('Tabela criada com o nome:', tableName);
             } else {
