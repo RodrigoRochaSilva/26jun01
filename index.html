@@ -439,12 +439,24 @@
             document.head.appendChild(script);
         }
 
+        // Função para verificar se shpwrite está disponível
+        function checkShpwriteLoaded(callback) {
+            var interval = setInterval(function() {
+                if (typeof shpwrite !== 'undefined') {
+                    clearInterval(interval);
+                    callback();
+                }
+            }, 100);
+        }
+
         // Função para exportar feições validadas
         function exportValidatedFeatures() {
             console.log('Export button clicked'); // Adiciona log para verificar se a função está sendo chamada
 
             loadScript("https://cdn.jsdelivr.net/npm/shpjs@latest/dist/shp.min.js", function() {
-                setTimeout(function() {
+                checkShpwriteLoaded(function() {
+                    console.log('shpwrite is now available'); // Verifica se shpwrite está disponível
+
                     const validatedFeatures = [];
 
                     gradeLayer.eachLayer(function(layer) {
@@ -475,7 +487,7 @@
                     } else {
                         alert('Nenhuma feição validada encontrada para exportação.');
                     }
-                }, 1000); // Atraso de 1 segundo para garantir o carregamento do script
+                });
             });
         }
 
