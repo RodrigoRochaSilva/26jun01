@@ -454,6 +454,8 @@
             console.log('Export button clicked'); // Adiciona log para verificar se a função está sendo chamada
 
             loadScript("https://cdn.jsdelivr.net/npm/shpjs@latest/dist/shp.min.js", function() {
+                console.log('shpjs script loaded'); // Verificação do carregamento do script
+
                 checkShpwriteLoaded(function() {
                     console.log('shpwrite is now available'); // Verifica se shpwrite está disponível
 
