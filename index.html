@@ -435,43 +435,38 @@
 
         // Função para exportar feições validadas
         function exportValidatedFeatures() {
-            // Verifique se shpwrite está definido
-            if (typeof shpwrite === 'undefined') {
-                alert('A biblioteca shpwrite não está disponível.');
-                console.error('A biblioteca shpwrite não está disponível.');
-                return;
-            }
+            setTimeout(function() {
+                const validatedFeatures = [];
 
-            const validatedFeatures = [];
-
-            gradeLayer.eachLayer(function(layer) {
-                if (layer.feature.properties.userValue !== undefined) {
-                    validatedFeatures.push(layer.feature);
-                }
-            });
-
-            console.log('Validated Features:', validatedFeatures);
-
-            if (validatedFeatures.length > 0) {
-                const geojson = {
-                    type: "FeatureCollection",
-                    features: validatedFeatures
-                };
-
-                const options = {
-                    types: {
-                        point: 'multiPoint',
-                        polygon: 'multiPolygon',
-                        line: 'multiLineString'
+                gradeLayer.eachLayer(function(layer) {
+                    if (layer.feature.properties.userValue !== undefined) {
+                        validatedFeatures.push(layer.feature);
                     }
-                };
+                });
 
-                console.log('GeoJSON to be exported:', geojson);
+                console.log('Validated Features:', validatedFeatures);
 
-                shpwrite.download(geojson, options, 'validated_features.zip');
-            } else {
-                alert('Nenhuma feição validada encontrada para exportação.');
-            }
+                if (validatedFeatures.length > 0) {
+                    const geojson = {
+                        type: "FeatureCollection",
+                        features: validatedFeatures
+                    };
+
+                    const options = {
+                        types: {
+                            point: 'multiPoint',
+                            polygon: 'multiPolygon',
+                            line: 'multiLineString'
+                        }
+                    };
+
+                    console.log('GeoJSON to be exported:', geojson);
+
+                    shpwrite.download(geojson, options, 'validated_features.zip');
+                } else {
+                    alert('Nenhuma feição validada encontrada para exportação.');
+                }
+            }, 1000); // Atraso de 1 segundo para garantir o carregamento do script
         }
 
         // Adiciona um listener para o botão "Exportar"
