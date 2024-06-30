@@ -443,6 +443,8 @@
                 }
             });
 
+            console.log('Validated Features:', validatedFeatures);
+
             if (validatedFeatures.length > 0) {
                 const geojson = {
                     type: "FeatureCollection",
@@ -456,6 +458,8 @@
                         line: 'multiLineString'
                     }
                 };
+
+                console.log('GeoJSON to be exported:', geojson);
 
                 shpwrite.download(geojson, options, 'validated_features.zip');
             } else {
