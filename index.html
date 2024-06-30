@@ -11,9 +11,6 @@
     <!-- Incluindo a biblioteca Leaflet JS -->
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
-    <!-- Incluindo a biblioteca shpjs -->
-    <script src="https://cdn.jsdelivr.net/npm/shpjs@latest/dist/shp.min.js"></script>
-
     <style>
         #map {
             margin: 0 auto;
@@ -433,40 +430,53 @@
         // Adiciona um listener para o botão "Limpar tudo"
         document.getElementById('clear-all-button').addEventListener('click', clearAllSelections);
 
+        // Função para carregar o script shpjs
+        function loadScript(url, callback) {
+            var script = document.createElement("script");
+            script.type = "text/javascript";
+            script.src = url;
+            script.onload = callback;
+            document.head.appendChild(script);
+        }
+
         // Função para exportar feições validadas
         function exportValidatedFeatures() {
-            setTimeout(function() {
-                const validatedFeatures = [];
+            console.log('Export button clicked'); // Adiciona log para verificar se a função está sendo chamada
 
-                gradeLayer.eachLayer(function(layer) {
-                    if (layer.feature.properties.userValue !== undefined) {
-                        validatedFeatures.push(layer.feature);
-                    }
-                });
+            loadScript("https://cdn.jsdelivr.net/npm/shpjs@latest/dist/shp.min.js", function() {
+                setTimeout(function() {
+                    const validatedFeatures = [];
 
-                console.log('Validated Features:', validatedFeatures);
-
-                if (validatedFeatures.length > 0) {
-                    const geojson = {
-                        type: "FeatureCollection",
-                        features: validatedFeatures
-                    };
-
-                    const options = {
-                        types: {
-                            point: 'multiPoint',
-                            polygon: 'multiPolygon',
-                            line: 'multiLineString'
+                    gradeLayer.eachLayer(function(layer) {
+                        if (layer.feature.properties.userValue !== undefined) {
+                            validatedFeatures.push(layer.feature);
                         }
-                    };
+                    });
 
-                    console.log('GeoJSON to be exported:', geojson);
+                    console.log('Validated Features:', validatedFeatures);
 
-                    shpwrite.download(geojson, options, 'validated_features.zip');
-                } else {
-                    alert('Nenhuma feição validada encontrada para exportação.');
-                }
-            }, 1000); // Atraso de 1 segundo para garantir o carregamento do script
+                    if (validatedFeatures.length > 0) {
+                        const geojson = {
+                            type: "FeatureCollection",
+                            features: validatedFeatures
+                        };
+
+                        const options = {
+                            types: {
+                                point: 'multiPoint',
+                                polygon: 'multiPolygon',
+                                line: 'multiLineString'
+                            }
+                        };
+
+                        console.log('GeoJSON to be exported:', geojson);
+
+                        shpwrite.download(geojson, options, 'validated_features.zip');
+                    } else {
+                        alert('Nenhuma feição validada encontrada para exportação.');
+                    }
+                }, 1000); // Atraso de 1 segundo para garantir o carregamento do script
+            });
         }
 
         // Adiciona um listener para o botão "Exportar"
