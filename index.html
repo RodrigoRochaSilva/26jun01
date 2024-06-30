@@ -442,6 +442,7 @@
         // Função para verificar se shpwrite está disponível
         function checkShpwriteLoaded(callback) {
             var interval = setInterval(function() {
+                console.log('Checking if shpwrite is available'); // Adiciona log para verificação
                 if (typeof shpwrite !== 'undefined') {
                     clearInterval(interval);
                     callback();
