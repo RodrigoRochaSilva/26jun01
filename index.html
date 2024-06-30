@@ -435,6 +435,13 @@
 
         // Função para exportar feições validadas
         function exportValidatedFeatures() {
+            // Verifique se shpwrite está definido
+            if (typeof shpwrite === 'undefined') {
+                alert('A biblioteca shpwrite não está disponível.');
+                console.error('A biblioteca shpwrite não está disponível.');
+                return;
+            }
+
             const validatedFeatures = [];
 
             gradeLayer.eachLayer(function(layer) {
