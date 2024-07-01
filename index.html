@@ -129,12 +129,12 @@
         Volume Total: 0
     </div>
 
-    <!-- Incluindo a biblioteca shp-write via jsDelivr -->
-    <script src="https://cdn.jsdelivr.net/npm/@mapbox/shp-write@2.3.0/dist/shpwrite.js"></script>
+    <!-- Incluindo a biblioteca geojson2shp via CDN -->
+    <script src="https://unpkg.com/geojson2shp/dist/geojson2shp.min.js"></script>
 
     <script>
-        console.log("shpwrite.js loaded from jsDelivr");
-        console.log("typeof shpwrite:", typeof shpwrite); // Adicionando log para verificar a disponibilidade de shpwrite
+        console.log("geojson2shp.min.js loaded");
+        console.log("typeof geojson2shp:", typeof geojson2shp); // Adicionando log para verificar a disponibilidade de geojson2shp
 
         // Inicializa o mapa com valores temporários
         var map = L.map('map').setView([0, 0], 13);
@@ -441,10 +441,10 @@
             console.log('Export button clicked'); // Adiciona log para verificar se a função está sendo chamada
 
             setTimeout(function() {
-                console.log('typeof shpwrite:', typeof shpwrite); // Verifica o tipo de shpwrite
+                console.log('typeof geojson2shp:', typeof geojson2shp); // Verifica o tipo de geojson2shp
 
-                if (typeof shpwrite !== 'undefined') {
-                    console.log('shpwrite is now available'); // Verifica se shpwrite está disponível
+                if (typeof geojson2shp !== 'undefined') {
+                    console.log('geojson2shp is now available'); // Verifica se geojson2shp está disponível
 
                     const validatedFeatures = [];
 
@@ -462,23 +462,15 @@
                             features: validatedFeatures
                         };
 
-                        const options = {
-                            types: {
-                                point: 'multiPoint',
-                                polygon: 'multiPolygon',
-                                line: 'multiLineString'
-                            }
-                        };
-
                         console.log('GeoJSON to be exported:', geojson);
 
-                        shpwrite.download(geojson, options, 'validated_features.zip');
+                        geojson2shp.download(geojson, { folder: 'validated_features', types: { polygon: 'poly' } });
                     } else {
                         alert('Nenhuma feição validada encontrada para exportação.');
                     }
                 } else {
-                    console.log('shpwrite is not available');
-                    alert('A biblioteca shpwrite não está disponível.');
+                    console.log('geojson2shp is not available');
+                    alert('A biblioteca geojson2shp não está disponível.');
                 }
             }, 1000); // Atraso de 1 segundo para garantir o carregamento do script
         }
