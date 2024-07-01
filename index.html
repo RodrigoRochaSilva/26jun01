@@ -129,12 +129,12 @@
         Volume Total: 0
     </div>
 
-    <!-- Incluindo a biblioteca js-shapefile-to-geojson via CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/js-shapefile-to-geojson@1.3.0/dist/shapefile.min.js"></script>
+    <!-- Incluindo a biblioteca shpwrite.js localmente -->
+    <script src="libs/shpwrite.js"></script>
 
     <script>
-        console.log("shapefile.min.js loaded");
-        console.log("typeof shapefile:", typeof shapefile); // Adicionando log para verificar a disponibilidade de shapefile
+        console.log("shpwrite.js loaded");
+        console.log("typeof shpwrite:", typeof shpwrite); // Adicionando log para verificar a disponibilidade de shpwrite
 
         // Inicializa o mapa com valores temporários
         var map = L.map('map').setView([0, 0], 13);
@@ -441,10 +441,10 @@
             console.log('Export button clicked'); // Adiciona log para verificar se a função está sendo chamada
 
             setTimeout(function() {
-                console.log('typeof shapefile:', typeof shapefile); // Verifica o tipo de shapefile
+                console.log('typeof shpwrite:', typeof shpwrite); // Verifica o tipo de shpwrite
 
-                if (typeof shapefile !== 'undefined') {
-                    console.log('shapefile is now available'); // Verifica se shapefile está disponível
+                if (typeof shpwrite !== 'undefined') {
+                    console.log('shpwrite is now available'); // Verifica se shpwrite está disponível
 
                     const validatedFeatures = [];
 
@@ -462,32 +462,23 @@
                             features: validatedFeatures
                         };
 
+                        const options = {
+                            types: {
+                                point: 'multiPoint',
+                                polygon: 'multiPolygon',
+                                line: 'multiLineString'
+                            }
+                        };
+
                         console.log('GeoJSON to be exported:', geojson);
 
-                        shapefile.write(geojson, {
-                            folder: 'validated_features',
-                            types: { polygon: 'poly' }
-                        }).then(function(files) {
-                            // Crie um link de download e clique nele para iniciar o download
-                            var link = document.createElement('a');
-                            link.href = URL.createObjectURL(files.shp);
-                            link.download = 'validated_features.shp';
-                            document.body.appendChild(link);
-                            link.click();
-                            document.body.removeChild(link);
-
-                            link.href = URL.createObjectURL(files.dbf);
-                            link.download = 'validated_features.dbf';
-                            document.body.appendChild(link);
-                            link.click();
-                            document.body.removeChild(link);
-                        });
+                        shpwrite.download(geojson, options, 'validated_features.zip');
                     } else {
                         alert('Nenhuma feição validada encontrada para exportação.');
                     }
                 } else {
-                    console.log('shapefile is not available');
-                    alert('A biblioteca shapefile não está disponível.');
+                    console.log('shpwrite is not available');
+                    alert('A biblioteca shpwrite não está disponível.');
                 }
             }, 1000); // Atraso de 1 segundo para garantir o carregamento do script
         }
