@@ -129,7 +129,9 @@
         Volume Total: 0
     </div>
 
+    <!-- Incluindo a biblioteca shp.js localmente -->
     <script src="libs/shp.min.js"></script>
+
     <script>
         // Inicializa o mapa com valores temporários
         var map = L.map('map').setView([0, 0], 13);
@@ -435,45 +437,43 @@
         function exportValidatedFeatures() {
             console.log('Export button clicked'); // Adiciona log para verificar se a função está sendo chamada
 
-            setTimeout(function() {
-                if (typeof shpwrite !== 'undefined') {
-                    console.log('shpwrite is now available'); // Verifica se shpwrite está disponível
+            if (typeof shpwrite !== 'undefined') {
+                console.log('shpwrite is now available'); // Verifica se shpwrite está disponível
 
-                    const validatedFeatures = [];
+                const validatedFeatures = [];
 
-                    gradeLayer.eachLayer(function(layer) {
-                        if (layer.feature.properties.userValue !== undefined) {
-                            validatedFeatures.push(layer.feature);
-                        }
-                    });
-
-                    console.log('Validated Features:', validatedFeatures);
-
-                    if (validatedFeatures.length > 0) {
-                        const geojson = {
-                            type: "FeatureCollection",
-                            features: validatedFeatures
-                        };
-
-                        const options = {
-                            types: {
-                                point: 'multiPoint',
-                                polygon: 'multiPolygon',
-                                line: 'multiLineString'
-                            }
-                        };
-
-                        console.log('GeoJSON to be exported:', geojson);
-
-                        shpwrite.download(geojson, options, 'validated_features.zip');
-                    } else {
-                        alert('Nenhuma feição validada encontrada para exportação.');
+                gradeLayer.eachLayer(function(layer) {
+                    if (layer.feature.properties.userValue !== undefined) {
+                        validatedFeatures.push(layer.feature);
                     }
+                });
+
+                console.log('Validated Features:', validatedFeatures);
+
+                if (validatedFeatures.length > 0) {
+                    const geojson = {
+                        type: "FeatureCollection",
+                        features: validatedFeatures
+                    };
+
+                    const options = {
+                        types: {
+                            point: 'multiPoint',
+                            polygon: 'multiPolygon',
+                            line: 'multiLineString'
+                        }
+                    };
+
+                    console.log('GeoJSON to be exported:', geojson);
+
+                    shpwrite.download(geojson, options, 'validated_features.zip');
                 } else {
-                    console.log('shpwrite is not available');
-                    alert('A biblioteca shpwrite não está disponível.');
+                    alert('Nenhuma feição validada encontrada para exportação.');
                 }
-            }, 1000); // Atraso de 1 segundo para garantir o carregamento do script
+            } else {
+                console.log('shpwrite is not available');
+                alert('A biblioteca shpwrite não está disponível.');
+            }
         }
 
         // Adiciona um listener para o botão "Exportar"
