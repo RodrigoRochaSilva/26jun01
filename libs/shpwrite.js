@@ -1,158 +1,491 @@
-(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.shpwrite = f()}})(function(){var define,module,exports;return function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r}()({1:[function(require,module,exports){
-var dbf = require('dbf');
-var zip = require('jszip')();
-var prj = require('./prj');
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mapa com Leaflet</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-function writePoint(coordinates, properties) {
-  return {
-    type: 'Feature',
-    properties: properties,
-    geometry: {
-      type: 'Point',
-      coordinates: coordinates
-    }
-  };
-}
+    <!-- Incluindo a biblioteca Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 
-function writeLineString(coordinates, properties) {
-  return {
-    type: 'Feature',
-    properties: properties,
-    geometry: {
-      type: 'LineString',
-      coordinates: coordinates
-    }
-  };
-}
+    <!-- Incluindo a biblioteca Leaflet JS -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
-function writePolygon(coordinates, properties) {
-  return {
-    type: 'Feature',
-    properties: properties,
-    geometry: {
-      type: 'Polygon',
-      coordinates: coordinates
-    }
-  };
-}
+    <style>
+        #map {
+            margin: 0 auto;
+            width: 80%;
+            min-height: 600px;
+            max-height: 800px;
+            height: 100%;
+        }
+        #layer-selector, #transparency-control, #input-section, #id-section, #select-all-section, #clear-all-section, #export-section {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+            background: white;
+            padding: 5px;
+            border-radius: 5px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+        }
+        #transparency-control {
+            top: 60px;
+            width: 200px;
+        }
+        #input-section {
+            top: 120px;
+            width: 200px;
+        }
+        #id-section {
+            top: 190px;
+            width: 200px;
+        }
+        #select-all-section {
+            top: 260px;
+            width: 200px;
+        }
+        #clear-all-section {
+            top: 330px;
+            width: 200px;
+        }
+        #export-section {
+            top: 400px;
+            width: 200px;
+        }
+        .label-style {
+            font-size: 10px;
+            color: black;
+            opacity: 1; /* Transparência padrão */
+        }
+        .feature-count, .selected-feature-count, .selected-area, .total-volume {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: white;
+            padding: 5px;
+            border-radius: 5px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+        }
+        .selected-feature-count {
+            bottom: 40px;
+        }
+        .selected-area {
+            bottom: 70px;
+        }
+        .total-volume {
+            bottom: 100px;
+        }
+        .validated-label {
+            font-size: 16px;
+            color: red;
+            text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <div id="layer-selector">
+        <label for="layers">Escolha a camada:</label>
+        <select id="layers">
+            <option value="ortofoto">Ortofoto</option>
+            <option value="vari">VARI</option>
+        </select>
+    </div>
+    <div id="transparency-control">
+        <label for="transparency">Transparência da camada vetorial (%):</label>
+        <input type="range" id="transparency" min="0" max="80" value="0">
+    </div>
+    <div id="input-section">
+        <label for="product-task">Produto ou tarefa:</label>
+        <input type="text" id="product-task" maxlength="28">
+        <button id="create-button">Criar</button>
+    </div>
+    <div id="id-section">
+        <label for="taxa-id">Taxa ou ID:</label>
+        <input type="text" id="taxa-id" maxlength="12" disabled>
+        <button id="validate-button" disabled>Validar</button>
+    </div>
+    <div id="select-all-section">
+        <button id="select-all-button" disabled>Selecionar todas as células</button>
+    </div>
+    <div id="clear-all-section">
+        <button id="clear-all-button" disabled>Limpar tudo</button>
+    </div>
+    <div id="export-section">
+        <button id="export-button">Exportar</button>
+    </div>
+    <div class="feature-count" id="feature-count">
+        Total de Feições: 0
+    </div>
+    <div class="selected-feature-count" id="selected-feature-count">
+        Feições Selecionadas: 0
+    </div>
+    <div class="selected-area" id="selected-area">
+        Área Selecionada: 0 ha
+    </div>
+    <div class="total-volume" id="total-volume">
+        Volume Total: 0
+    </div>
 
-function geojsonToFeatureCollection(geojson) {
-  if (geojson.type === 'FeatureCollection') {
-    return geojson;
-  } else {
-    return {
-      type: 'FeatureCollection',
-      features: [geojson]
-    };
-  }
-}
+    <!-- Incluindo a biblioteca shp-write via CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/shp-write@latest/shp-write.min.js"></script>
 
-function geojsonToShapefile(geojson, options) {
-  options = options || {};
+    <script>
+        console.log("shp-write.min.js loaded");
+        console.log("typeof shpwrite:", typeof shpwrite); // Adicionando log para verificar a disponibilidade de shpwrite
 
-  var fc = geojsonToFeatureCollection(geojson),
-      properties = [],
-      shapes = [];
+        // Inicializa o mapa com valores temporários
+        var map = L.map('map').setView([0, 0], 13);
 
-  fc.features.forEach(function(feature) {
-    properties.push(feature.properties);
-    shapes.push(feature.geometry);
-  });
+        // Adiciona a camada base do OpenStreetMap (CartoDB Voyager)
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+            subdomains: 'abcd',
+            maxZoom: 24
+        }).addTo(map);
 
-  return {
-    type: 'shapefile',
-    fileName: options.fileName || 'shapefile',
-    geometries: shapes,
-    properties: properties
-  };
-}
+        let currentOverlay;
+        let gradeLayer;
+        let labelLayers = [];
+        let featureCount = 0;
+        let selectedFeatures = new Set();
+        let createdTableName = null;
 
-function writeShapefile(geojson, options) {
-  var shapefile = geojsonToShapefile(geojson, options);
+        // Função para adicionar uma camada de imagem ao mapa
+        function addImageOverlay(imageUrl, bounds) {
+            if (currentOverlay) {
+                map.removeLayer(currentOverlay);
+            }
+            currentOverlay = L.imageOverlay(imageUrl, bounds).addTo(map);
+        }
 
-  var shpBuffer = new ArrayBuffer(100),
-      shpDataView = new DataView(shpBuffer),
-      shpBytes = new Uint8Array(shpBuffer);
+        // Função para buscar coordenadas de georreferenciamento
+        fetch('camadas/coordenadas.txt')
+            .then(response => response.text())
+            .then(text => {
+                // Parseia as coordenadas do arquivo de texto
+                const coords = JSON.parse(text);
 
-  var writeGeometry = function(type, geometries, properties) {
-    if (type === 'Point') {
-      geometries.forEach(function(geometry, i) {
-        zip.file('shapefile.shp', writePoint(geometry.coordinates, properties[i]), { binary: true });
-      });
-    } else if (type === 'LineString') {
-      geometries.forEach(function(geometry, i) {
-        zip.file('shapefile.shp', writeLineString(geometry.coordinates, properties[i]), { binary: true });
-      });
-    } else if (type === 'Polygon') {
-      geometries.forEach(function(geometry, i) {
-        zip.file('shapefile.shp', writePolygon(geometry.coordinates, properties[i]), { binary: true });
-      });
-    }
-  };
+                const west = coords[0];
+                const south = coords[1];
+                const east = coords[2];
+                const north = coords[3];
 
-  writeGeometry(shapefile.geometries[0].type, shapefile.geometries, shapefile.properties);
+                // Calcula o centro da imagem
+                const centerLat = (south + north) / 2;
+                const centerLng = (west + east) / 2;
 
-  var dbfBuffer = dbf.structure([
-    { name: 'ID', type: 'C', size: 10 }
-  ]);
+                // Atualiza a visualização inicial do mapa
+                map.setView([centerLat, centerLng], 15);
 
-  zip.file('shapefile.dbf', new Uint8Array(dbfBuffer), { binary: true });
-  zip.file('shapefile.prj', prj);
-  return zip.generateAsync({ type: 'blob' });
-}
+                // Adiciona a camada padrão (ortofoto)
+                addImageOverlay('camadas/ortofoto.png', [[south, west], [north, east]]);
 
-module.exports = writeShapefile;
+                // Adiciona um listener para a mudança de camada
+                document.getElementById('layers').addEventListener('change', function(e) {
+                    const selectedLayer = e.target.value;
+                    if (selectedLayer === 'ortofoto') {
+                        addImageOverlay('camadas/ortofoto.png', [[south, west], [north, east]]);
+                    } else if (selectedLayer === 'vari') {
+                        addImageOverlay('camadas/vari.png', [[south, west], [north, east]]);
+                    }
+                });
+            })
+            .catch(error => {
+                console.error('Erro ao carregar o arquivo de coordenadas:', error);
+            });
 
-},{"./prj":2,"dbf":3,"jszip":4}],2:[function(require,module,exports){
-module.exports = [
-  'GEOGCS["WGS 84",',
-  '  DATUM["WGS_1984",',
-  '    SPHEROID["WGS 84",6378137,298.257223563,',
-  '      AUTHORITY["EPSG","7030"]],',
-  '    AUTHORITY["EPSG","6326"]],',
-  '  PRIMEM["Greenwich",0,',
-  '    AUTHORITY["EPSG","8901"]],',
-  '  UNIT["degree",0.01745329251994328,',
-  '    AUTHORITY["EPSG","9122"]],',
-  '  AUTHORITY["EPSG","4326"]]'
-].join('\n');
+        // Função para destacar uma feição
+        function highlightFeature(e) {
+            const layer = e.target;
 
-},{}],3:[function(require,module,exports){
-module.exports = function structure(fields) {
-  var rows = [], i, buffer;
+            if (selectedFeatures.has(layer)) {
+                layer.setStyle({
+                    color: 'black',
+                    weight: 3,
+                    fillOpacity: 0,
+                    fillColor: ''
+                });
+                selectedFeatures.delete(layer);
+            } else {
+                layer.setStyle({
+                    color: 'blue',
+                    weight: 3,
+                    fillOpacity: 0.25,
+                    fillColor: 'white'
+                });
+                selectedFeatures.add(layer);
+            }
 
-  buffer = new ArrayBuffer(32 + 32 * fields.length + 1);
-  rows.push(buffer);
+            countSelectedFeatures();
+            calculateSelectedArea();
+        }
 
-  for (i = 0; i < fields.length; i++) {
-    rows.push(dbfField(fields[i]));
-  }
+        // Função para contar feições selecionadas
+        function countSelectedFeatures() {
+            const selectedCount = selectedFeatures.size;
+            document.getElementById('selected-feature-count').innerText = 'Feições Selecionadas: ' + selectedCount;
+        }
 
-  rows.push(0x0D);
-  return new Uint8Array(rows.flat());
-};
+        // Função para calcular a área total das feições selecionadas
+        function calculateSelectedArea() {
+            let totalArea = 0;
+            selectedFeatures.forEach(function(layer) {
+                if (layer.feature.properties && layer.feature.properties.area) {
+                    totalArea += layer.feature.properties.area;
+                }
+            });
+            document.getElementById('selected-area').innerText = 'Área Selecionada: ' + totalArea.toFixed(2) + ' ha';
+        }
 
-function dbfField(field) {
-  var buffer = new ArrayBuffer(32),
-      view = new DataView(buffer);
+        // Função para calcular o volume total de produto
+        function calculateTotalVolume() {
+            let totalVolume = 0;
+            gradeLayer.eachLayer(function(layer) {
+                if (layer.feature.properties && layer.feature.properties.userValue && layer.feature.properties.area) {
+                    totalVolume += layer.feature.properties.userValue * layer.feature.properties.area;
+                }
+            });
+            document.getElementById('total-volume').innerText = 'Volume Total: ' + totalVolume.toFixed(2);
+        }
 
-  var name = field.name,
-      type = field.type,
-      size = field.size;
+        // Adiciona a camada vetorial "grade" com rótulos
+        fetch('camadas/grade.geojson')
+            .then(response => response.json())
+            .then(data => {
+                featureCount = data.features.length;
+                document.getElementById('feature-count').innerText = 'Total de Feições: ' + featureCount;
 
-  for (var i = 0; i < name.length; i++) {
-    view.setUint8(i, name.charCodeAt(i));
-  }
+                gradeLayer = L.geoJSON(data, {
+                    style: function() {
+                        return {
+                            color: 'black',
+                            weight: 3,
+                            fillOpacity: 0, // Mantém o preenchimento transparente
+                            opacity: 1 // Transparência padrão (1 = 100% opaco)
+                        };
+                    },
+                    onEachFeature: function (feature, layer) {
+                        layer.on({
+                            click: highlightFeature
+                        });
 
-  view.setUint8(11, type.charCodeAt(0));
-  view.setUint8(16, size);
-  return new Uint8Array(buffer);
-}
+                        if (feature.properties && feature.properties.score) {
+                            const centroid = layer.getBounds().getCenter();
+                            const label = L.marker(centroid, {
+                                icon: L.divIcon({
+                                    className: 'label-style',
+                                    html: feature.properties.score
+                                })
+                            }).addTo(map);
+                            label.on('click', function() {
+                                highlightFeature({ target: layer });
+                            });
+                            labelLayers.push(label); // Adiciona o rótulo à lista
+                        }
+                    }
+                }).addTo(map);
 
-},{}],4:[function(require,module,exports){
-module.exports = require("jszip");
+                // Configura a transparência inicial
+                updateTransparency(document.getElementById('transparency').value);
+            })
+            .catch(error => {
+                console.error('Erro ao carregar o arquivo GeoJSON:', error);
+            });
 
-},{"jszip":5}],5:[function(require,module,exports){
-// JSZip implementation
-},{}]},{},[1])(1)
-});
+        // Função para atualizar a transparência da camada vetorial e dos rótulos
+        function updateTransparency(value) {
+            if (gradeLayer) {
+                const opacityValue = 1 - (value / 100); // Converte o valor do controle deslizante para opacidade
+                gradeLayer.eachLayer(function(layer) {
+                    layer.setStyle({
+                        opacity: opacityValue,
+                        fillOpacity: selectedFeatures.has(layer) ? 0.25 : 0 // Mantém o preenchimento transparente
+                    });
+                });
+                labelLayers.forEach(function(label) {
+                    const labelElement = label.getElement();
+                    if (labelElement) {
+                        labelElement.style.opacity = opacityValue;
+                    }
+                });
+            }
+        }
+
+        // Adiciona um listener para o controle de transparência
+        document.getElementById('transparency').addEventListener('input', function(e) {
+            const transparencyValue = e.target.value;
+            updateTransparency(transparencyValue);
+        });
+
+        // Função para criar uma nova tabela com o nome informado no input
+        function createTable() {
+            const input = document.getElementById('product-task');
+            const tableName = input.value.trim();
+
+            if (tableName) {
+                createdTableName = tableName;
+                document.getElementById('taxa-id').disabled = false;
+                document.getElementById('validate-button').disabled = false;
+                document.getElementById('select-all-button').disabled = false;
+                document.getElementById('clear-all-button').disabled = false;
+                alert('Tabela criada com o nome: ' + tableName);
+                console.log('Tabela criada com o nome:', tableName);
+            } else {
+                alert('O nome da tabela não pode estar vazio');
+                console.log('O nome da tabela não pode estar vazio');
+            }
+        }
+
+        // Adiciona um listener para o botão "Criar"
+        document.getElementById('create-button').addEventListener('click', createTable);
+
+        // Função para validar as feições selecionadas
+        function validateSelectedFeatures() {
+            const input = document.getElementById('taxa-id');
+            const value = input.value.trim();
+
+            if (value) {
+                selectedFeatures.forEach(function(layer) {
+                    if (layer.feature.properties.userValue) {
+                        // Remove o rótulo anterior se existir
+                        labelLayers = labelLayers.filter(label => {
+                            if (label.getLatLng().equals(layer.getBounds().getCenter())) {
+                                map.removeLayer(label);
+                                return false;
+                            }
+                            return true;
+                        });
+                    }
+
+                    layer.feature.properties.userValue = parseFloat(value);
+                    layer.setStyle({
+                        color: 'red',
+                        weight: 3,
+                        fillOpacity: 0.5,
+                        fillColor: 'gray'
+                    });
+
+                    const centroid = layer.getBounds().getCenter();
+                    const label = L.marker(centroid, {
+                        icon: L.divIcon({
+                            className: 'validated-label',
+                            html: value
+                        })
+                    }).addTo(map);
+                    labelLayers.push(label); // Adiciona o rótulo à lista
+
+                    // Desseleciona a feição após a validação
+                    selectedFeatures.delete(layer);
+                });
+
+                // Atualiza a contagem de feições selecionadas
+                countSelectedFeatures();
+                // Atualiza a área das feições selecionadas
+                calculateSelectedArea();
+                // Atualiza o volume total
+                calculateTotalVolume();
+            } else {
+                alert('O valor da Taxa ou ID não pode estar vazio');
+                console.log('O valor da Taxa ou ID não pode estar vazio');
+            }
+        }
+
+        // Adiciona um listener para o botão "Validar"
+        document.getElementById('validate-button').addEventListener('click', validateSelectedFeatures);
+
+        // Função para selecionar todas as feições
+        function selectAllFeatures() {
+            gradeLayer.eachLayer(function(layer) {
+                if (!selectedFeatures.has(layer)) {
+                    layer.setStyle({
+                        color: 'blue',
+                        weight: 3,
+                        fillOpacity: 0.25,
+                        fillColor: 'white'
+                    });
+                    selectedFeatures.add(layer);
+                }
+            });
+
+            countSelectedFeatures();
+            calculateSelectedArea();
+        }
+
+        // Função para desselecionar todas as feições
+        function clearAllSelections() {
+            selectedFeatures.forEach(function(layer) {
+                layer.setStyle({
+                    color: 'black',
+                    weight: 3,
+                    fillOpacity: 0,
+                    fillColor: ''
+                });
+            });
+            selectedFeatures.clear();
+
+            countSelectedFeatures();
+            calculateSelectedArea();
+        }
+
+        // Adiciona um listener para o botão "Selecionar todas as células"
+        document.getElementById('select-all-button').addEventListener('click', selectAllFeatures);
+
+        // Adiciona um listener para o botão "Limpar tudo"
+        document.getElementById('clear-all-button').addEventListener('click', clearAllSelections);
+
+        // Função para exportar feições validadas
+        function exportValidatedFeatures() {
+            console.log('Export button clicked'); // Adiciona log para verificar se a função está sendo chamada
+
+            setTimeout(function() {
+                console.log('typeof shpwrite:', typeof shpwrite); // Verifica o tipo de shpwrite
+
+                if (typeof shpwrite !== 'undefined') {
+                    console.log('shpwrite is now available'); // Verifica se shpwrite está disponível
+
+                    const validatedFeatures = [];
+
+                    gradeLayer.eachLayer(function(layer) {
+                        if (layer.feature.properties.userValue !== undefined) {
+                            validatedFeatures.push(layer.feature);
+                        }
+                    });
+
+                    console.log('Validated Features:', validatedFeatures);
+
+                    if (validatedFeatures.length > 0) {
+                        const geojson = {
+                            type: "FeatureCollection",
+                            features: validatedFeatures
+                        };
+
+                        const options = {
+                            types: {
+                                point: 'multiPoint',
+                                polygon: 'multiPolygon',
+                                line: 'multiLineString'
+                            }
+                        };
+
+                        console.log('GeoJSON to be exported:', geojson);
+
+                        shpwrite.download(geojson, options, 'validated_features.zip');
+                    } else {
+                        alert('Nenhuma feição validada encontrada para exportação.');
+                    }
+                } else {
+                    console.log('shpwrite is not available');
+                    alert('A biblioteca shpwrite não está disponível.');
+                }
+            }, 1000); // Atraso de 1 segundo para garantir o carregamento do script
+        }
+
+        // Adiciona um listener para o botão "Exportar"
+        document.getElementById('export-button').addEventListener('click', exportValidatedFeatures);
+
+    </script>
+</body>
+</html>
